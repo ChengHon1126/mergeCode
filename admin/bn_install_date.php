@@ -216,24 +216,24 @@ $install_check = !empty($GET['install']) ? '1' : '2';
 						<option value="3" <?= (@$_GET["deliver_setup"] == 3) ? "SELECTED" : "" ?>>只送不裝</option>
 					</select>
 				</td>
-                <td width="5%" align="right">預約安裝日期：</td>
-                <td width="8%" align="left">
-                    <?php if(!empty($_GET['install_start'])){?>
-                        <input type="date" name="install_start" value="<?= $install_start ?>" size="10">
-                    <?php } else{?>
-                        <input type="date" name="install_start" size="10">
-                    <?php }?>
-                </td>
-                <td width="1%" align="left">
-                    ~
-                </td>
-                <td width="8%" align="left">
-                    <?php if(!empty($_GET['install_end'])){?>
-                        <input type="date" name="install_end" value="<?= $install_end ?>" size="10">
-                    <?php } else{?>
-                        <input type="date" name="install_end" size="10">
-                    <?php }?>
-                </td>
+				<td width="5%" align="right">預約安裝日期：</td>
+				<td width="8%" align="left">
+					<?php if (!empty($_GET['install_start'])) { ?>
+						<input type="date" name="install_start" value="<?= $install_start ?>" size="10">
+					<?php } else { ?>
+						<input type="date" name="install_start" size="10">
+					<?php } ?>
+				</td>
+				<td width="1%" align="left">
+					~
+				</td>
+				<td width="8%" align="left">
+					<?php if (!empty($_GET['install_end'])) { ?>
+						<input type="date" name="install_end" value="<?= $install_end ?>" size="10">
+					<?php } else { ?>
+						<input type="date" name="install_end" size="10">
+					<?php } ?>
+				</td>
 			</tr>
 		</form>
 	</table>

@@ -242,6 +242,7 @@ class bn_notice
 		}
 
 		$sql = "SELECT a.*,b.bn_type AS now_bn_type FROM bn_master AS a LEFT JOIN bn_eod AS b ON a.bn_eod_id = b.bn_eod_id $clause ORDER BY a.to_eod_date DESC LIMIT $start, $num_per_page";
+		echo $sql;
 		$result = $GLOBALS['DB']->get_query_result($sql, false);
 
 		$sql = "SELECT count(1) as num FROM bn_master AS a LEFT JOIN bn_eod AS b ON a.bn_eod_id = b.bn_eod_id $clause ";
@@ -1557,10 +1558,10 @@ class bn_notice
 							$update_user = $_SESSION["emp_name"];
 							$update_usercode = $_SESSION["emp_code"];
 							$update_ip = $_SERVER['REMOTE_ADDR'];
-							if ($item_qty_r <= 0) {
-								$error_msg .= "單號:" . $bn_no . " 貨品:" . $item_code . " 數量有誤請確認<br>";
-								$error_status = true;
-							}
+							// if ($item_qty_r <= 0) {
+							// 	$error_msg .= "單號:" . $bn_no . " 貨品:" . $item_code . " 數量有誤請確認<br>";
+							// 	$error_status = true;
+							// }
 							if (!empty($inv_detail)) {
 								foreach ($inv_detail as $inv_key => $inv_value) {
 									if ($item_qty_r > 0 && $inv_value["stock_qty"] > 0) {
@@ -1622,10 +1623,10 @@ class bn_notice
 								}
 							}
 
-							if ($item_qty_r > 0) {
-								$error_msg .= "單號:" . $bn_no . " 貨品:" . $item_code . " 儲位數量不足 ，請聯繫資訊人員<br>";
-								$error_status = true;
-							}
+							// if ($item_qty_r > 0) {
+							// 	$error_msg .= "單號:" . $bn_no . " 貨品:" . $item_code . " 儲位數量不足 ，請聯繫資訊人員<br>";
+							// 	$error_status = true;
+							// }
 						}
 					} else {
 						$error_msg .= "單號:" . $bn_master["bn_no"] . " 沒有貨品資料請確認!<br>";
@@ -1636,12 +1637,12 @@ class bn_notice
 						sql_multi_query($sql_bn_list);
 						// exit;
 						$stock_list = $this->check_bn_stock($id, $bn_detail_id);
-						foreach ($stock_list as $key => $value) {
-							if ($value["NowQty"] < 0) {
-								$error_msg .= "單號:" . $value["bn_no"] . " 貨品:" . $value["item_code"] . " 序號:" . $value["item_sno"] . " 帳面庫存數不足 " . $value["NowQty"] . " <br>";
-								$error_status = true;
-							}
-						}
+						// foreach ($stock_list as $key => $value) {
+						// 	if ($value["NowQty"] < 0) {
+						// 		$error_msg .= "單號:" . $value["bn_no"] . " 貨品:" . $value["item_code"] . " 序號:" . $value["item_sno"] . " 帳面庫存數不足 " . $value["NowQty"] . " <br>";
+						// 		$error_status = true;
+						// 	}
+						// }
 						if (!$error_status) {
 							$upd_ok_list = $this->check_bn_detail_lss_upd_ok($bn_detail_id, $update_usercode, $update_user);
 							if (!empty($upd_ok_list)) {
@@ -1873,7 +1874,11 @@ class bn_notice
 												      					AND a.lc_id = b.lc_id 
 												      					AND a.lsa_id = b.lsa_id 
 												      					AND a.lss_id = b.lss_id ";
-		// echo $sql.'<br>';exit;
+		// echo $sql . '<br>';
+		// echo "<pre>";
+		// print_r($GLOBALS['DB']->get_query_result($sql, false));
+		// echo "</pre>";
+		// exit;
 		return $GLOBALS['DB']->get_query_result($sql, false);
 	}
 	function chk_inv_stock($f_var1, $f_var2, $f_var3, $f_var4, $f_var5)
@@ -2010,9 +2015,10 @@ class bn_notice
 				if (!$error_status) {
 					if ($bn_master["bn_box"] > 0) {
 						$this->update_bn_master($id);
-					} else {
-						$error_msg .= "單號:" . $bn_master["bn_no"] . " 沒有貨品無法轉單<br>";
 					}
+					// else {
+					// 	$error_msg .= "單號:" . $bn_master["bn_no"] . " 沒有貨品無法轉單<br>";
+					// }
 				}
 			} else {
 				$error_msg .= "單號:" . $bn_master["bn_no"] . " 已轉單請確認!<br>";
@@ -3270,7 +3276,7 @@ class bn_notice
 	// 	return array($result,$num["num"]);
 	// }
 
-	function bn_momo_list_HAO($data,  $page = 1, $num_per_page = 10)
+	function bn_momo_list($data,  $page = 1, $num_per_page = 10)
 	{
 
 		// $clause = "WHERE 1=1 AND a.to_eod = 1 AND a.cargo_code = 'MOMO' AND receiver_store_code = ''";
@@ -3423,196 +3429,6 @@ class bn_notice
 			LEFT JOIN momo_do AS c ON a.bn_no = c.order_no
 			LEFT JOIN tw_postal as tp on a.bn_receiver_zip = tp.area_code
 			$clause AND length(a.bn_no) > 12 ";
-		$num = $GLOBALS['DB']->get_query_result($sql, true);
-
-		return array($result, $num["num"]);
-	}
-
-
-	// **************************************************************************
-	//  函數名稱: bn_momo_list()
-	//  函數功能:
-	//  使用方式:
-	//  備    註:
-	//  程式設計: Sam
-	//  設計日期: 2024.09.30
-	// **************************************************************************
-
-	function bn_momo_list($data,  $page = 1, $num_per_page = 10)
-	{
-
-		// $clause = "WHERE 1=1 AND a.to_eod = 1 AND a.cargo_code = 'MOMO' AND receiver_store_code = ''";
-		$clause = "WHERE 1=1 AND a.to_eod = 1 AND a.cargo_code = 'MOMO'";
-		$start   = ($page - 1) * $num_per_page;
-
-		$bn_mode = (int)$data["bn_mode"];
-		if ($bn_mode >= 0) {
-			$clause .= " AND a.bn_mode = $bn_mode ";
-		}
-
-
-		if (!empty($data["bn_no"])) {
-			$bn_no = trim($data["bn_no"]);
-			$clause .= " AND a.bn_no LIKE '%$bn_no%' ";
-		}
-
-
-		if (!empty($data["receiver_name"])) {
-			$receiver_name = trim($data["receiver_name"]);
-			$clause .= " AND a.bn_receiver_name LIKE '%$receiver_name%' ";
-		}
-
-
-		if (!empty($data["receiver_addr"])) {
-			$receiver_addr = trim($data["receiver_addr"]);
-			$clause .= " AND a.bn_receiver_addr LIKE '%$receiver_addr%' ";
-		}
-
-
-		if (!empty($data["receiver_phone"])) {
-			$receiver_phone = trim($data["receiver_phone"]);
-			$clause .= " AND a.bn_receiver_phone LIKE '%$receiver_phone%' ";
-		}
-
-		if (!empty($data["receiver_phone2"])) {
-			$receiver_phone2 = trim($data["receiver_phone2"]);
-			$clause .= " AND a.bn_receiver_phone2 LIKE '%$receiver_phone2%' ";
-		}
-
-
-		if (!empty($data["deliver_name"])) {
-			$deliver_name = trim($data["deliver_name"]);
-			$clause .= " AND a.bn_deliver_name LIKE '%$deliver_name%' ";
-		}
-
-
-		if (!empty($data["deliver_addr"])) {
-			$deliver_addr = trim($data["deliver_addr"]);
-			$clause .= " AND a.bn_deliver_addr LIKE '%$deliver_addr%' ";
-		}
-
-
-		if (!empty($data["deliver_phone"])) {
-			$deliver_phone = trim($data["deliver_phone"]);
-			$clause .= " AND a.bn_deliver_phone LIKE '%$deliver_phone%' ";
-		}
-
-		if (!empty($data["deliver_phone2"])) {
-			$deliver_phone2 = trim($data["deliver_phone2"]);
-			$clause .= " AND a.bn_deliver_phone2 LIKE '%$deliver_phone2%' ";
-		}
-
-		if (!empty($data["bn_type"])) {
-			$bn_type = (int)$data["bn_type"];
-			if ($bn_type > 0) {
-				if ($bn_type == 9) {
-					$clause .= " AND a.self_carr = 'Y' ";
-				} else {
-					$clause .= " AND a.bn_type = $bn_type ";
-				}
-			}
-		}
-
-
-		if (!empty($GLOBALS["lc_code"])) {
-			$lc_code = trim($GLOBALS["lc_code"]);
-			$clause .= " AND a.lc_code = '$lc_code' ";
-		}
-
-		if (empty($data["date_start"])) {
-			$data["date_start"] = date("Y-m-d", time() - 86400);
-		}
-		$date_start = strtotime(trim($data["date_start"]) . " 00:00:00");
-		if (!empty($date_start)) {
-			$clause .= " AND a.to_eod_date >= $date_start ";
-		}
-
-		if (empty($data["date_end"])) {
-			$data["date_end"] = date("Y-m-d", time());
-		}
-		$date_end = strtotime(trim($data["date_end"]) . " 23:59:59");
-		if (!empty($date_end)) {
-			$clause .= " AND a.to_eod_date <= $date_end ";
-		}
-
-		if (!empty($data["deliver_setup"])) {
-			$deliver_setup = (int)$data["deliver_setup"];
-			$clause .= " AND a.deliver_setup = $deliver_setup ";
-		}
-
-
-		if (!empty($data["status_code"])) {
-			$status_code = trim($data["status_code"]);
-			$clause .= " AND a.bn_status_code = '$status_code' ";
-		}
-
-
-		if (!empty($data["shipping_code"])) {
-			$shipping_code = trim($data["shipping_code"]);
-			$clause .= " AND c.shipping_code = '$shipping_code' ";
-		}
-		if (!empty($data["print_status"])) {
-			$print_status = $data["print_status"];
-			if ($print_status == 1) {
-				$clause .= " AND a.bn_print = 0 ";
-			} elseif ($print_status == 2) {
-				$clause .= " AND a.bn_print = 1 ";
-			}
-		}
-
-		if (!empty($data["print_werks"])) {
-			$print_werks = trim($data["print_werks"]);
-			if ($print_werks > 1) {
-				$clause .= " and tp.lc_id = '{$print_werks}' ";
-			}
-		}
-
-		if ($data["fast_deliver"])
-			$sql = "SELECT a.*,b.bn_type AS now_bn_type,c.shipping_code
-					FROM bn_master AS a
-					LEFT JOIN bn_eod AS b ON a.bn_eod_id = b.bn_eod_id
-					LEFT JOIN momo_do AS c ON a.bn_no = c.order_no
-					LEFT JOIN bn_detail AS d ON a.bn_master_id=d.bn_master_id
-					LEFT JOIN tw_postal as tp on a.bn_receiver_zip = tp.area_code
-					$clause AND length(a.bn_no) > 12 
-					AND EXISTS (SELECT 1 FROM item_fast_deliver AS e WHERE d.item_code = e.item_code)
-					ORDER BY a.to_eod_date DESC LIMIT $start, $num_per_page";
-		
-		else
-			$sql = "SELECT a.*,b.bn_type AS now_bn_type,c.shipping_code
-                                        FROM bn_master AS a
-                                        LEFT JOIN bn_eod AS b ON a.bn_eod_id = b.bn_eod_id
-                                        LEFT JOIN momo_do AS c ON a.bn_no = c.order_no
-                                        LEFT JOIN tw_postal as tp on a.bn_receiver_zip = tp.area_code
-                                        $clause AND length(a.bn_no) > 12 ORDER BY a.to_eod_date DESC LIMIT $start, $num_per_page";
-
-			
-		if ($_SESSION["emp_id"] == '187' || $_SESSION["emp_id"] == '191') {
-			// echo $sql . '<br>';
-			echo '<pre>';
-			print_r($sql);
-			echo '</pre>';
-			// exit;
-		}
-		$result1 = $GLOBALS['DB']->get_query_result($sql, false);
-		momo_back_api($result1);
-
-		$result = $GLOBALS['DB']->get_query_result($sql, false);
-	
-		if ($data["fast_deliver"])
-			$sql = "SELECT count(1) as num
-				FROM bn_master AS a LEFT JOIN bn_eod AS b ON a.bn_eod_id = b.bn_eod_id
-				LEFT JOIN momo_do AS c ON a.bn_no = c.order_no
-				LEFT JOIN bn_detail AS d ON a.bn_master_id=d.bn_master_id
-				LEFT JOIN tw_postal as tp on a.bn_receiver_zip = tp.area_code
-				$clause AND length(a.bn_no) > 12 AND EXISTS (SELECT 1 FROM item_fast_deliver AS e WHERE d.item_code = e.item_code)";
-		else
-			$sql = "SELECT count(1) as num
-                                FROM bn_master AS a LEFT JOIN bn_eod AS b ON a.bn_eod_id = b.bn_eod_id
-                                LEFT JOIN momo_do AS c ON a.bn_no = c.order_no
-                                LEFT JOIN tw_postal as tp on a.bn_receiver_zip = tp.area_code
-                                $clause AND length(a.bn_no) > 12 ";
-		
 		$num = $GLOBALS['DB']->get_query_result($sql, true);
 
 		return array($result, $num["num"]);
@@ -4956,7 +4772,7 @@ class bn_notice
 	}
 
 	// **************************************************************************
-	//  函數名稱: bn_install_list_HAO()
+	//  函數名稱: bn_install_list()
 	//  函數功能: 
 	//  使用方式: 
 	//  備    註: 
@@ -4964,7 +4780,7 @@ class bn_notice
 	//  設計日期: 2022.07.19
 	// **************************************************************************
 
-	function bn_install_list_HAO($data,  $page = 1, $num_per_page = 10)
+	function bn_install_list($data,  $page = 1, $num_per_page = 10)
 	{
 
 		// $clause = "WHERE a.to_eod = 1 ";
@@ -5119,173 +4935,6 @@ class bn_notice
 		return array($result, $num, $total_v);
 	}
 
-	// **************************************************************************
-	//  函數名稱: bn_install_list()
-	//  函數功能: 
-	//  使用方式: 
-	//  備    註: 
-	//  程式設計: Sam
-	//  設計日期: 2024.09.29
-	// **************************************************************************
-
-	function bn_install_list($data,  $page = 1, $num_per_page = 10)
-	{
-
-		// $clause = "WHERE a.to_eod = 1 ";
-		// $clause2 = "WHERE a.to_eod = 1 ";
-		// $clause = "WHERE a.to_eod = 1  AND a.self_carr = 'N' ";
-		// $clause2 = "WHERE a.to_eod = 1  AND a.self_carr = 'N' ";
-		$clause = "WHERE a.to_eod = 1  AND a.self_carr = 'N'";
-		$clause2 = "WHERE ";
-		// a.to_eod = 1 AND a.self_carr = 'N' AND AND createdate between 1682265600 AND 1682438399
-		$start   = ($page - 1) * $num_per_page;
-		if (empty($data["date_start"])) {
-			$data["date_start"] = date("Y-m-d", time() - 86400);
-		}
-		$date_start = strtotime(trim($data["date_start"]) . " 00:00:00");
-
-
-		if (empty($data["date_end"])) {
-			$data["date_end"] = date("Y-m-d", time());
-		}
-
-
-		$date_end = strtotime(trim($data["date_end"]) . " 23:59:59");
-		$clause2 .= " a.createdate between $date_start and $date_end and self_carr = 'N'";
-
-		if (!empty($data["cargo_code"])) {
-			$cargo_code = trim($data["cargo_code"]);
-			// $clause .= " AND a.cargo_code LIKE '$cargo_code%' ";
-			$clause2 .= " AND a.cargo_code LIKE '$cargo_code%' ";
-		}
-
-
-		if (!empty($data["bn_no"])) {
-			$bn_no = trim($data["bn_no"]);
-			// $clause .= " AND a.bn_no LIKE '%$bn_no' ";
-			$clause2 .= " AND a.bn_no LIKE '%$bn_no' ";
-		}
-
-
-		if (!empty($data["receiver_name"])) {
-			$receiver_name = trim($data["receiver_name"]);
-			// $clause .= " AND a.bn_receiver_name LIKE '%$receiver_name%' ";
-			$clause2 .= " AND a.bn_receiver_name LIKE '%$receiver_name%' ";
-		}
-
-
-		if (!empty($data["receiver_addr"])) {
-			$receiver_addr = trim($data["receiver_addr"]);
-			// $clause .= " AND a.bn_receiver_addr LIKE '%$receiver_addr%' ";
-			$clause2 .= " AND a.bn_receiver_addr LIKE '%$receiver_addr%' ";
-		}
-
-
-		if (!empty($data["receiver_phone"])) {
-			$receiver_phone = trim($data["receiver_phone"]);
-			if ($data["receiver_phone"] <> '') {
-				// $clause .= " AND (a.bn_receiver_phone LIKE '%$receiver_phone%' or a.bn_receiver_phone2 LIKE '%$receiver_phone%' ) ";
-				$clause2 .= " AND (a.bn_receiver_phone LIKE '%$receiver_phone%' or a.bn_receiver_phone2 LIKE '%$receiver_phone%' ) ";
-			}
-		}
-
-
-		if (!empty($data["deliver_name"])) {
-			$deliver_name = trim($data["deliver_name"]);
-			// $clause .= " AND a.bn_deliver_name LIKE '%$deliver_name%' ";
-			$clause2 .= " AND a.bn_deliver_name LIKE '%$deliver_name%' ";
-		}
-
-
-		// if (!empty($GLOBALS["lc_code"])&& empty($_GET["status"]) ) {
-		// 	$lc_code = trim($GLOBALS["lc_code"]);
-		// 	$clause .= " AND b.lc_code = '$lc_code' ";
-		// 	// $clause2 .= " AND lc_code = '$lc_code' ";
-		// }
-
-		if (!empty($data["bn_type"])) {
-			$bn_type = (int)$data["bn_type"];
-			if ($bn_type > 0) {
-				// $clause .= " AND a.bn_type = $bn_type ";
-				$clause2 .= " AND a.bn_type = $bn_type ";
-			}
-		}
-
-
-		if (!empty($data["status_code"])) {
-			$status_code = (int)$data["status_code"];
-			if ($status_code > 0) {
-				// $clause .= " AND a.bn_status_code = $status_code ";
-				$clause2 .= " AND a.bn_status_code = $status_code ";
-			}
-		}
-		// if(!empty($data["sel_lc_code"])){
-		// 	$sel_lc_code = trim($data["sel_lc_code"]);
-		// 	if (!empty($sel_lc_code)) {
-		// 		$clause .= " AND b.lc_code LIKE '%$sel_lc_code%' ";
-		// 	}
-		// }
-		if (!empty($data["deliver_setup"])) {
-			$deliver_setup = (int)$data["deliver_setup"];
-			if ($deliver_setup > 0) {
-				$deliver_setup--;
-				// $clause .= " AND a.deliver_setup = $deliver_setup ";
-				$clause2 .= " AND a.deliver_setup = $deliver_setup ";
-			}
-		}
-
-
-		if ($data["fast_deliver"]) 
-			$sql = "SELECT a.bn_master_id FROM bn_master AS a, bn_detail AS b $clause2 AND a.bn_master_id = b.bn_master_id AND EXISTS (SELECT 1 FROM item_fast_deliver AS c WHERE b.item_code = c.item_code)";
-		else 
-			$sql = "SELECT a.bn_master_id FROM bn_master as a $clause2 ";
-
-		// if ($_SESSION["emp_id"] == '144' || $_SESSION["emp_id"] == '7') {
-		// echo $sql . '<br>';
-		// }
-		$result = $GLOBALS['DB']->get_query_result($sql, false);
-		if (!empty($result)) {
-			$bn_master_id = '';
-			for ($i = 0; $i < count($result); $i++) {
-				if (!empty($result[$i]['bn_master_id'])) {
-					$bn_master_id .= "'" . $result[$i]['bn_master_id'] . "',";
-				}
-			}
-			$bn_master_id = substr($bn_master_id, 0, -1);
-
-			$sql = "SELECT a.*, MAX(c.phone_time) 
-							 FROM bn_master AS a RIGHT JOIN bn_eod AS b ON a.bn_master_id = b.bn_master_id LEFT JOIN
-							 bn_phone_sod AS c ON a.bn_master_id = c.bn_master_id
-							 $clause and a.bn_master_id in ($bn_master_id) 
-							 GROUP BY b.bn_master_id 
-							 ORDER BY a.createdate 
-							 DESC LIMIT $start, $num_per_page";
-			// if ($_SESSION["emp_id"] == '144' || $_SESSION["emp_id"] == '7') {
-			// echo $sql . '<br>';
-			// }
-			$result = $GLOBALS['DB']->get_query_result($sql, false);
-
-			$sql = "SELECT b.bn_master_id as num,bn_volume FROM bn_master AS a RIGHT JOIN bn_eod AS b ON a.bn_master_id = b.bn_master_id $clause  and a.bn_master_id in ($bn_master_id) GROUP BY b.bn_master_id ";
-			if ($_SESSION["emp_id"] == '144' || $_SESSION["emp_id"] == '7') {
-				echo $sql . '<br>';
-			}
-			$num = $GLOBALS['DB']->get_query_result($sql, false);
-			$total_v = 0;
-			if (!empty($num)) {
-				foreach ($num as $key => $value) {
-					$total_v += $value["bn_volume"];
-				}
-			} else {
-				$num = 0;
-			}
-		} else {
-			$num = 0;
-			$total_v = 0;
-			$result = 'error';
-		}
-		$num = empty($num) ? 0 : count($num);
-		return array($result, $num, $total_v);
-	}
 
 	// **************************************************************************
 	//  函數名稱: bn_install_list_isinstall()
@@ -5302,28 +4951,30 @@ class bn_notice
 		$clause = "WHERE a.to_eod = 1  AND a.self_carr = 'N'";
 		$clause2 = "WHERE ";
 		$start   = ($page - 1) * $num_per_page;
-        if (empty($data["date_start"])) {
-            $data["date_start"] = date("Y-m-d", time() - 86400);
-        }
-        if (empty($data["date_end"])) {
-            $data["date_end"] = date("Y-m-d", time());
-        }
-
-        $date_start = strtotime(trim($data["date_start"]) . " 00:00:00");
-        $date_end = strtotime(trim($data["date_end"]) . " 23:59:59");
-
-        $clause2 .= " createdate between $date_start and $date_end and self_carr = 'N'";
+		if (empty($data["date_start"])) {
+			$data["date_start"] = date("Y-m-d", time() - 86400);
+		}
+		$date_start = strtotime(trim($data["date_start"]) . " 00:00:00");
 
 
+		if (empty($data["date_end"])) {
+			$data["date_end"] = date("Y-m-d", time());
+		}
 		if (!empty($data["install_start"])) {
-            $clause2 .= " AND a.install_date >= '".$data["install_start"]."'";
+			$install_start = strtotime(trim($data["date_start"]) . " 00:00:00");
 		}
-
-
+		if (!empty($install_start)) {
+			$clause .= " AND a.install_date >= $install_start ";
+		}
 		if (!empty($data["install_end"])) {
-			$clause2 .= " AND a.install_date <= '".$data["install_end"]."'";
+			$intsall_end = strtotime(trim($data["install_end"]) . " 23:59:59");
 		}
+		$date_end = strtotime(trim($data["date_end"]) . " 23:59:59");
 
+		if (!empty($intsall_end)) {
+			$clause .= " AND a.install_date <= $intsall_end ";
+		}
+		$clause2 .= " createdate between $date_start and $date_end and self_carr = 'N'";
 
 		if (!empty($data["cargo_code"])) {
 			$cargo_code = trim($data["cargo_code"]);
@@ -5401,10 +5052,9 @@ class bn_notice
 		}
 
 
-		$sql = "SELECT a.bn_master_id FROM bn_master as a $clause2  ";
+		$sql = "SELECT a.bn_master_id FROM bn_master as a $clause2 AND install_date != '' ";
 		// if ($_SESSION["emp_id"] == '144' || $_SESSION["emp_id"] == '7') {
 		// }
-        
 		$result = $GLOBALS['DB']->get_query_result($sql, false);
 		if (!empty($result)) {
 			$bn_master_id = '';
@@ -5788,7 +5438,7 @@ class bn_notice
 							bn_status_code = '$edit_status_code',
 							bn_status = '$edit_status_name(原$ORI_status)',
 							updatedate = '$edit_time',
-							createuser = '$edit_user',
+							updateuser = '$edit_user',
 							status_send = '0'
 					WHERE bn_master_id = $edit_id AND createdate = $sod_createdate
 			";
